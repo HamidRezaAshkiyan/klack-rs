@@ -7,9 +7,11 @@ import {
   Mouse,
   PanelTopClose,
   Settings,
+  ShieldAlert,
   Sliders,
 } from "lucide-react";
 import clsx from "clsx";
+import { api } from "./lib/tauri";
 import { useAppStore } from "./store/useAppStore";
 import { ToggleSwitch } from "./components/ToggleSwitch";
 import { PopoverView } from "./components/PopoverView";
@@ -37,7 +39,9 @@ export default function App() {
     activeTab,
     config,
     sleepStatus,
+    permissions,
     bootstrap,
+    refreshPermissions,
     setUiMode,
     setActiveTab,
     toggleEnabled,
@@ -62,11 +66,17 @@ export default function App() {
       }),
     ];
 
+    const permTimer = window.setInterval(() => {
+      refreshPermissions();
+    }, 3000);
+
     return () => {
+      window.clearInterval(permTimer);
       unlisteners.forEach((p) => p.then((fn) => fn()));
     };
   }, [
     bootstrap,
+    refreshPermissions,
     setConfigFromEvent,
     setEnabledFromEvent,
     setSleepStatus,
@@ -158,7 +168,29 @@ export default function App() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto p-6">
-        <div className="mx-auto max-w-2xl">
+        <div className="mx-auto max-w-2xl space-y-4">
+          {permissions && !permissions.accessibility_granted && (
+            <div className="flex items-center justify-between gap-3 rounded-2xl border border-amber-500/50 bg-amber-500/15 px-4 py-3">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <ShieldAlert className="h-5 w-5 shrink-0 text-amber-400" />
+                <div className="text-xs text-amber-100">
+                  <span className="font-semibold">Accessibility permission needed.</span>{" "}
+                  <span className="text-amber-200/80">
+                    After an update, remove &amp; re-add (or toggle off/on) Klack-rs in System Settings → Privacy &amp; Security → Accessibility.
+                  </span>
+                </div>
+              </div>
+              {permissions.platform === "macos" && (
+                <button
+                  type="button"
+                  onClick={() => api.openAccessibilitySettings()}
+                  className="shrink-0 rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-zinc-950 hover:bg-amber-400"
+                >
+                  Open Settings
+                </button>
+              )}
+            </div>
+          )}
           {activeTab === "switches" && <SwitchesTab />}
           {activeTab === "audio" && <AudioToneTab />}
           {activeTab === "mouse" && <MouseScrollTab />}
