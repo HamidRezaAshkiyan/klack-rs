@@ -1,6 +1,6 @@
 [package]
 name = "klack-rs"
-version = "0.1.0"
+version = "0.1.1"
 description = "Cross-platform mechanical keyboard, mouse, and scroll sound engine compatible 1:1 with Klack"
 authors = ["HamidReza Ashkiyan"]
 license = "MIT"

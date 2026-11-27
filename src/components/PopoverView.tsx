@@ -1,8 +1,10 @@
+import { useState } from "react";
 import {
   Keyboard,
   Moon,
   Mouse,
   Play,
+  Search,
   SlidersHorizontal,
   Volume2,
   VolumeX,
@@ -16,8 +18,19 @@ import { ToggleSwitch } from "./ToggleSwitch";
 export function PopoverView() {
   const { config, switchPacks, sleepStatus, patchConfig, toggleEnabled, setUiMode } =
     useAppStore();
+  const [query, setQuery] = useState("");
 
   if (!config) return null;
+
+  const q = query.trim().toLowerCase();
+  const visiblePacks = q
+    ? switchPacks.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q) ||
+          p.feel.toLowerCase().includes(q),
+      )
+    : switchPacks;
 
   return (
     <div className="flex h-screen flex-col bg-zinc-950 p-4 text-zinc-100">
@@ -80,12 +93,24 @@ export function PopoverView() {
       </div>
 
       {/* Switches Quick Picker */}
-      <div className="mt-3 flex-1 overflow-y-auto pr-0.5">
-        <div className="mb-1.5 px-1 text-[11px] font-medium uppercase tracking-wider text-zinc-500">
-          Switches
+      <div className="mt-3 flex min-h-0 flex-1 flex-col">
+        <div className="mb-1.5 flex items-center justify-between px-1">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">
+            Presets ({visiblePacks.length})
+          </span>
         </div>
-        <div className="space-y-1.5">
-          {switchPacks.map((pack) => {
+        <div className="relative mb-2">
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3 w-3 -translate-y-1/2 text-zinc-500" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Filter presets..."
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-900/70 py-1 pl-7 pr-2 text-[11px] text-zinc-100 placeholder:text-zinc-500 focus:border-amber-500/50 focus:outline-none"
+          />
+        </div>
+        <div className="flex-1 space-y-1.5 overflow-y-auto pr-0.5">
+          {visiblePacks.map((pack) => {
             const active = pack.id === config.active_switch_id;
             return (
               <div

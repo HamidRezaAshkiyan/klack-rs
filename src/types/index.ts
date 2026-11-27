@@ -28,6 +28,7 @@ export interface SwitchPack {
   name: string;
   brand: string;
   feel: string;
+  category: string;
   description: string;
   accent_color: string;
   is_custom: boolean;

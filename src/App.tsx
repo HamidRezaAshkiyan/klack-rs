@@ -97,7 +97,7 @@ export default function App() {
             </div>
             <div>
               <div className="text-sm font-bold tracking-tight">Klack-rs</div>
-              <div className="text-[10px] text-zinc-500">v0.1.0 · Native</div>
+              <div className="text-[10px] text-zinc-500">v0.1.1 · Native</div>
             </div>
           </div>
         </div>

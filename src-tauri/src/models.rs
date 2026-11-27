@@ -67,12 +67,18 @@ impl SwitchZoneMapping {
     }
 }
 
+fn default_category() -> String {
+    "Custom".to_string()
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SwitchPack {
     pub id: String,
     pub name: String,
     pub brand: String,
     pub feel: String,
+    #[serde(default = "default_category")]
+    pub category: String,
     pub description: String,
     pub accent_color: String,
     pub is_custom: bool,

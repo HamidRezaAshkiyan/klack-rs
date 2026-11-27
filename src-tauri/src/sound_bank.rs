@@ -119,14 +119,29 @@ fn spec(sprite: &str, pitch_scale: f32, gain_scale: f32) -> ZoneSoundSpec {
     }
 }
 
-/// 8 curated Klack-style mechanical & tactile Switch Sets built from button-sounds.
+fn category_accent(category: &str) -> &'static str {
+    match category {
+        "Keyboard" => "#f59e0b",
+        "Mouse" => "#38bdf8",
+        "Scroll" => "#22d3ee",
+        "Tactile" => "#34d399",
+        "Gamepad" => "#ec4899",
+        "Arcade" => "#f43f5e",
+        "Hardware" => "#a78bfa",
+        "Synth" => "#818cf8",
+        _ => "#f59e0b",
+    }
+}
+
+/// 8 curated multi-zone Klack-style Switch Sets + all 55 individual button-sounds presets (63 total).
 pub fn builtin_switch_packs() -> Vec<SwitchPack> {
-    vec![
+    let mut packs = vec![
         SwitchPack {
             id: "leobog-hi75".into(),
             name: "Leobog Hi75".into(),
             brand: "Leobog".into(),
             feel: "Thocky Tactile".into(),
+            category: "Curated".into(),
             description: "Deep, resonant gasket-mounted thock with dedicated spacebar and heavy modifier acoustics.".into(),
             accent_color: "#f59e0b".into(),
             is_custom: false,
@@ -145,6 +160,7 @@ pub fn builtin_switch_packs() -> Vec<SwitchPack> {
             name: "NuPhy Halo".into(),
             brand: "NuPhy".into(),
             feel: "Creamy Linear".into(),
+            category: "Curated".into(),
             description: "Smooth, creamy low-profile mechanical strokes with dedicated shift and ghostbar recordings.".into(),
             accent_color: "#38bdf8".into(),
             is_custom: false,
@@ -163,6 +179,7 @@ pub fn builtin_switch_packs() -> Vec<SwitchPack> {
             name: "UHK Tactile".into(),
             brand: "Ultimate Hacking".into(),
             feel: "Crisp Office".into(),
+            category: "Curated".into(),
             description: "Clean, articulate tactile feedback ideal for long coding sessions without harsh treble.".into(),
             accent_color: "#34d399".into(),
             is_custom: false,
@@ -181,6 +198,7 @@ pub fn builtin_switch_packs() -> Vec<SwitchPack> {
             name: "ASUS Mechanical".into(),
             brand: "ASUS ROG".into(),
             feel: "Clicky Gaming".into(),
+            category: "Curated".into(),
             description: "High-definition, punchy mechanical switches with crisp bottom-out and snappy return.".into(),
             accent_color: "#fb7185".into(),
             is_custom: false,
@@ -199,6 +217,7 @@ pub fn builtin_switch_packs() -> Vec<SwitchPack> {
             name: "ErgoDox MX".into(),
             brand: "Cherry MX".into(),
             feel: "Classic Mechanical".into(),
+            category: "Curated".into(),
             description: "Iconic Cherry MX keyswitch character with subtle acoustic tuning per stabilizer zone.".into(),
             accent_color: "#a78bfa".into(),
             is_custom: false,
@@ -217,6 +236,7 @@ pub fn builtin_switch_packs() -> Vec<SwitchPack> {
             name: "Studio Pads".into(),
             brand: "Stream Deck".into(),
             feel: "Broadcast Tactile".into(),
+            category: "Curated".into(),
             description: "Muted studio-console button clicks with metallic and resonant accents on large keys.".into(),
             accent_color: "#22d3ee".into(),
             is_custom: false,
@@ -235,6 +255,7 @@ pub fn builtin_switch_packs() -> Vec<SwitchPack> {
             name: "Cardboard Thump".into(),
             brand: "Lo-Fi Acoustic".into(),
             feel: "Deep Muted".into(),
+            category: "Curated".into(),
             description: "Warm, ultra-low thumpy acoustic pops inspired by Klack's beloved Cardboard switch set.".into(),
             accent_color: "#d97706".into(),
             is_custom: false,
@@ -253,6 +274,7 @@ pub fn builtin_switch_packs() -> Vec<SwitchPack> {
             name: "Retro Arcade".into(),
             brand: "IIDX / Microswitch".into(),
             feel: "Snappy Micro".into(),
+            category: "Curated".into(),
             description: "Razor-sharp microswitch snaps combining arcade buttons and DualSense tactile clicks.".into(),
             accent_color: "#ec4899".into(),
             is_custom: false,
@@ -266,7 +288,35 @@ pub fn builtin_switch_packs() -> Vec<SwitchPack> {
                 numpad: spec("ps5-double", 1.0, 0.95),
             },
         },
-    ]
+    ];
+
+    // Add every individual multi-sampled sound from joshwcomeau/button-sounds as a ready-to-use preset
+    for s in sprite_catalog() {
+        packs.push(SwitchPack {
+            id: format!("sprite-{}", s.id),
+            name: s.label.clone(),
+            brand: "button-sounds".into(),
+            feel: format!("{} · {}× pairs", s.category, s.sample_pairs),
+            category: s.category.clone(),
+            description: format!(
+                "Pure {} recording ({} down/up variations) with subtle stabilizer pitch tuning.",
+                s.label, s.sample_pairs
+            ),
+            accent_color: category_accent(&s.category).into(),
+            is_custom: false,
+            zones: SwitchZoneMapping {
+                alpha: spec(&s.id, 1.0, 1.0),
+                space: spec(&s.id, 0.86, 1.1),
+                enter: spec(&s.id, 0.93, 1.05),
+                backspace: spec(&s.id, 0.96, 1.02),
+                modifier: spec(&s.id, 0.95, 0.94),
+                function: spec(&s.id, 1.06, 0.92),
+                numpad: spec(&s.id, 1.01, 0.96),
+            },
+        });
+    }
+
+    packs
 }
 
 #[derive(Debug, Clone)]
@@ -613,6 +663,21 @@ mod tests {
             let next = pick_non_repeating_index(5, "hi75:d", &map);
             assert_ne!(next, prev);
             prev = next;
+        }
+    }
+
+    #[test]
+    fn builtin_packs_include_all_55_button_sounds() {
+        let packs = builtin_switch_packs();
+        let catalog = sprite_catalog();
+        assert_eq!(catalog.len(), 55);
+        assert_eq!(packs.len(), 8 + 55);
+        for s in catalog {
+            assert!(
+                packs.iter().any(|p| p.id == format!("sprite-{}", s.id)),
+                "missing preset for sprite {}",
+                s.id
+            );
         }
     }
 
